@@ -6,10 +6,11 @@ import time
 import signal
 import sys
 
+
 def signal_handler(sig, frame):
     end_time = time.time()
     total_time = end_time - start_time
-    created_files = iteration - 1
+    created_files = len(modified_hashes)
 
     print(f"Программа была прервана.")
     print(f"Время выполнения программы: {total_time} секунд")
@@ -22,19 +23,23 @@ def signal_handler(sig, frame):
 
     sys.exit(0)
 
+
 # Устанавливаем обработчик прерывания Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
 
 # Запоминаем время начала выполнения программы
 start_time = time.time()
 
+
 # Функция для случайной замены регистра букв в слове
 def random_change_case(word):
     return ''.join(random.choice([c.upper(), c.lower()]) for c in word)
 
+
 # Функция для случайного удаления символов "." и ";"
 def random_remove_chars(text):
     return re.sub(r'[.;]', '', text, random.randint(0, 5))
+
 
 # Функция для случайного замены "млн" на "миллиона(-ов)" с вероятностью 10%
 def random_replace_mln(text):
@@ -44,6 +49,7 @@ def random_replace_mln(text):
 # Функция для случайной замены "и" на "и/или" с вероятностью 10%
 def random_replace_and(text):
     return re.sub(r'\b и \b', ' и/или ', text, random.randint(0, 5), flags=re.IGNORECASE)
+
 
 # Метод для создания нового модифицированного файла на основе предыдущего файла
 def create_modified_file(previous_file_name, iteration):
@@ -100,6 +106,7 @@ def create_modified_file(previous_file_name, iteration):
 
     return modified_file_name, modified_hash
 
+
 # Чтение оригинального текста из leasing.txt
 with open('leasing.txt', 'r', encoding='utf-8') as original_file:
     original_text = original_file.read()
@@ -118,6 +125,9 @@ if original_hash is None:
 else:
     original_file_size = os.path.getsize('leasing.txt')
     print(f"Размер оригинального файла: {original_file_size} байт")
+
+    modified_hashes = []
+
     # Создаем модифицированные файлы до обнаружения коллизии
     previous_file = 'leasing.txt'
     iteration = 1
@@ -125,13 +135,15 @@ else:
         modified_file, modified_hash = create_modified_file(previous_file, iteration)
         modified_file_size = os.path.getsize(modified_file)
         print(f"Создан файл номер {iteration}: {modified_file}. Размер файла: {modified_file_size} байт")
-        # Сравниваем текущий модифицированный хеш-код с хеш-кодом оригинального файла
-        if modified_hash == original_hash:
+
+        # Проверяем, есть ли такой хеш-код уже в списке
+        if modified_hash in modified_hashes:
             print(f"Коллизия обнаружена при создании файла {modified_file}: {modified_hash}. Программа завершена.")
             end_time = time.time()
             total_time = end_time - start_time
             print(f"Время выполнения программы: {total_time} секунд")
             break
 
+        modified_hashes.append(modified_hash)
         previous_file = modified_file
         iteration += 1
